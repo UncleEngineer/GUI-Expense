@@ -2,6 +2,7 @@ from tkinter import *
 from tkinter import ttk
 import csv
 from datetime import datetime
+from expensedb import *
 
 GUI = Tk()
 GUI.geometry('700x600')
@@ -68,10 +69,13 @@ def save():
         data = [t,title,price,ptype]
         fw.writerow(data)
 
+    insert_expense(t,title,price,ptype)
+
     v_title.set('')
     v_price.set('')
     E1.focus()
-    readdata_csv()
+    # readdata_csv()
+    readdata_db()
 
 
 B = ttk.Button(F1,text='บันทึก',command=save)
@@ -82,8 +86,8 @@ B.place(x=0,y=0,width=200,height=80)
 # B.pack(ipadx=50,ipady=50)
 
 ###########################TAB 2###########################
-header = ['วัน/เวลา','รายการ','ราคา','หมวดหมู่']
-headerw = [150,200,150,180]
+header = ['ID','วัน/เวลา','รายการ','ราคา','หมวดหมู่']
+headerw = [20,150,200,150,180]
 
 expenselist = ttk.Treeview(T2, columns=header, show='headings',height=20)
 expenselist.pack()
@@ -121,8 +125,40 @@ def readdata_csv():
     record = ['','','Total:     {:,.2f}'.format(total),'']
     expenselist.insert('','end',values=record)
 
+def readdata_db():
+    expenselist.delete(*expenselist.get_children())
+    total = []
+    data = view_expense()
+    for d in data:
+        total.append(d[3])
+        try:
+            dtext = [d[0],d[1],d[2],'{:,.2f}'.format(d[3]),d[4]]
+            expenselist.insert('','end',values=dtext)
+        except:
+            expenselist.insert('','end',values=d)
+
+    total = sum(total)
+    record = ['','','','Total:     {:,.2f}'.format(total),'']
+    expenselist.insert('','end',values=record)
+
+
+def del_expense(event=None):
+    try:
+        ts = expenselist.selection()
+        x = expenselist.item(ts)
+        print(x['values'][0])
+        ID = x['values'][0]
+        delete_expense(ID)
+        readdata_db()
+
+    except:
+        pass
+
+expenselist.bind('<Delete>',del_expense)
+
 try:
-    readdata_csv()
+    # readdata_csv()
+    readdata_db()
 except:
     pass
 
